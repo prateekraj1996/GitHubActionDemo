@@ -1,0 +1,37 @@
+name: Set Cycle on Ticket Close
+
+on:
+  issues:
+    types:
+      - closed
+
+jobs:
+  set-cycle-on-close:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set Cycle
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+      script: |
+        const issue = await github.issues.get({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          issue_number: context.issue.number
+        });
+
+        const cycleLabel = 'cycle-set';  // Replace with your label name
+        const currentLabels = issue.data.labels.map(label => label.name);
+
+        if (!currentLabels.includes(cycleLabel)) {
+          await github.issues.addLabels({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            labels: [cycleLabel]
+          });
+        }
